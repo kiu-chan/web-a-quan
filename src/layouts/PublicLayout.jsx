@@ -20,7 +20,7 @@ const PublicLayout = ({ children }) => {
 
   const menuItems = [
     { path: '/', label: 'Trang chủ', icon: AiOutlineHome },
-    { path: '/about', label: 'Về tôi', icon: AiOutlineUser },
+    { path: '/about', label: 'Về chúng tôi', icon: AiOutlineUser },
     { path: '/courses', label: 'Khóa học', icon: AiOutlineBook },
     { path: '/enroll', label: 'Đăng ký học', icon: AiOutlineUserAdd },
     { path: '/blog', label: 'Blog / Kiến thức', icon: AiOutlineFileText },
@@ -28,12 +28,12 @@ const PublicLayout = ({ children }) => {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-pink-100 via-purple-100 to-blue-100">
       {/* Header */}
-      <header className="bg-white shadow-md sticky top-0 z-50">
+      <header className="bg-white/80 backdrop-blur-sm shadow-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
-            <Link to="/" className="text-2xl font-bold text-blue-600">
+            <Link to="/" className="text-2xl font-bold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent">
               Học tiếng Đức
             </Link>
             
@@ -50,8 +50,8 @@ const PublicLayout = ({ children }) => {
                         to={item.path}
                         className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
                           isActive 
-                            ? 'text-blue-600 bg-blue-50' 
-                            : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                            ? 'text-purple-600 bg-purple-50' 
+                            : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50'
                         }`}
                       >
                         <Icon className="text-lg" />
@@ -65,7 +65,7 @@ const PublicLayout = ({ children }) => {
 
             {/* Mobile menu button */}
             <button 
-              className="md:hidden p-2 rounded-md text-gray-600 hover:text-blue-600"
+              className="md:hidden p-2 rounded-md text-gray-600 hover:text-purple-600"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               {isMobileMenuOpen ? (
@@ -90,8 +90,8 @@ const PublicLayout = ({ children }) => {
                         to={item.path}
                         className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                           isActive 
-                            ? 'text-blue-600 bg-blue-50' 
-                            : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                            ? 'text-purple-600 bg-purple-50' 
+                            : 'text-gray-600 hover:text-purple-600 hover:bg-purple-50'
                         }`}
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
@@ -118,7 +118,7 @@ const PublicLayout = ({ children }) => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Logo & Description */}
             <div>
-              <h3 className="text-xl font-bold text-blue-400 mb-4">Học tiếng Đức</h3>
+              <h3 className="text-xl font-bold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent mb-4">Học tiếng Đức</h3>
               <p className="text-gray-300 mb-4">
                 Học tiếng Đức để hiểu & đúng trong tâm
               </p>
