@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
+import { useState } from 'react'
 import { 
   AiOutlineHome, 
   AiOutlineUser, 
@@ -8,11 +9,14 @@ import {
   AiOutlinePhone,
   AiOutlineFacebook,
   AiOutlineInstagram,
-  AiOutlineTwitter
+  AiOutlineTwitter,
+  AiOutlineMenu,
+  AiOutlineClose
 } from 'react-icons/ai'
 
 const PublicLayout = ({ children }) => {
   const location = useLocation()
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const menuItems = [
     { path: '/', label: 'Trang chủ', icon: AiOutlineHome },
@@ -26,14 +30,14 @@ const PublicLayout = ({ children }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Header */}
-      <header className="bg-white shadow-md">
+      <header className="bg-white shadow-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <Link to="/" className="text-2xl font-bold text-blue-600">
               Học tiếng Đức
             </Link>
             
-            {/* Navigation */}
+            {/* Desktop Navigation */}
             <nav className="hidden md:flex">
               <ul className="flex space-x-8">
                 {menuItems.map((item) => {
@@ -60,12 +64,46 @@ const PublicLayout = ({ children }) => {
             </nav>
 
             {/* Mobile menu button */}
-            <button className="md:hidden p-2 rounded-md text-gray-600 hover:text-blue-600">
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
+            <button 
+              className="md:hidden p-2 rounded-md text-gray-600 hover:text-blue-600"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? (
+                <AiOutlineClose className="h-6 w-6" />
+              ) : (
+                <AiOutlineMenu className="h-6 w-6" />
+              )}
             </button>
           </div>
+
+          {/* Mobile Navigation */}
+          {isMobileMenuOpen && (
+            <div className="md:hidden pb-4">
+              <ul className="space-y-2">
+                {menuItems.map((item) => {
+                  const Icon = item.icon
+                  const isActive = location.pathname === item.path
+                  
+                  return (
+                    <li key={item.path}>
+                      <Link 
+                        to={item.path}
+                        className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                          isActive 
+                            ? 'text-blue-600 bg-blue-50' 
+                            : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                        }`}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <Icon className="text-lg" />
+                        <span>{item.label}</span>
+                      </Link>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          )}
         </div>
       </header>
 
