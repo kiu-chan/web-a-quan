@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { collection, addDoc, getDocs, serverTimestamp } from 'firebase/firestore'
+import { db } from '../../../firebase'
 import { 
   AiOutlinePhone, 
   AiOutlineMail, 
@@ -10,7 +12,8 @@ import {
   AiOutlineFacebook,
   AiOutlineInstagram,
   AiOutlineYoutube,
-  AiOutlineWechat
+  AiOutlineWechat,
+  AiOutlineLoading3Quarters
 } from 'react-icons/ai'
 
 const Contact = () => {
@@ -20,38 +23,73 @@ const Contact = () => {
     phone: '',
     subject: '',
     message: '',
-    contactMethod: 'email',
-    urgency: 'normal'
+    contactMethod: 'email'
+  })
+
+  const [contactInfo, setContactInfo] = useState({
+    address: "Thái Nguyên, Việt Nam",
+    description: "Học tiếng Đức để hiểu & đúng trong tâm",
+    email: "khanhk66uet@gmail.com",
+    facebook: "https://facebook.com/hoctiengduc",
+    instagram: "https://instagram.com/hoctiengduc",
+    phone: "+84 123 456 789",
+    twitter: "https://twitter.com/hoctiengduc",
+    zalo: "0974022602"
   })
 
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [submitError, setSubmitError] = useState('')
 
-  const contactInfo = [
+  // Lấy thông tin liên hệ từ Firebase
+  useEffect(() => {
+    const fetchContactInfo = async () => {
+      try {
+        const contactsCollection = collection(db, 'configs', 'contacts', 'data')
+        const contactsSnapshot = await getDocs(contactsCollection)
+        
+        if (!contactsSnapshot.empty) {
+          const contactData = contactsSnapshot.docs[0].data()
+          setContactInfo(prev => ({ ...prev, ...contactData }))
+        }
+      } catch (error) {
+        console.error('Lỗi khi lấy thông tin liên hệ:', error)
+        // Giữ thông tin mặc định nếu không lấy được từ Firebase
+      }
+    }
+
+    fetchContactInfo()
+  }, [])
+
+  const contactInfoCards = [
     {
       icon: AiOutlinePhone,
       title: 'Hotline',
-      info: '+84 123 456 789',
+      info: contactInfo.phone,
       subInfo: 'Miễn phí cuộc gọi',
-      color: 'from-pink-400 to-purple-500'
+      color: 'from-pink-400 to-purple-500',
+      href: `tel:${contactInfo.phone}`
     },
     {
       icon: AiOutlineMail,
       title: 'Email',
-      info: 'contact@hoctiengduc.com',
+      info: contactInfo.email,
       subInfo: 'Phản hồi trong 2 giờ',
-      color: 'from-purple-400 to-blue-500'
+      color: 'from-purple-400 to-blue-500',
+      href: `mailto:${contactInfo.email}`
     },
     {
       icon: AiOutlineWechat,
       title: 'Zalo',
-      info: '0123 456 789',
+      info: contactInfo.zalo || contactInfo.phone,
       subInfo: 'Chat trực tiếp',
-      color: 'from-blue-400 to-indigo-500'
+      color: 'from-blue-400 to-indigo-500',
+      href: `https://zalo.me/${(contactInfo.zalo || contactInfo.phone).replace(/\D/g, '')}`
     },
     {
       icon: AiOutlineEnvironment,
       title: 'Địa chỉ',
-      info: 'Thái Nguyên, Việt Nam',
+      info: contactInfo.address,
       subInfo: 'Gặp mặt trực tiếp',
       color: 'from-indigo-400 to-purple-500'
     }
@@ -61,28 +99,28 @@ const Contact = () => {
     {
       icon: AiOutlineFacebook,
       name: 'Facebook',
-      url: '#',
+      url: contactInfo.facebook,
       color: 'hover:text-blue-600',
       bgColor: 'hover:bg-blue-50'
     },
     {
       icon: AiOutlineInstagram,
       name: 'Instagram',
-      url: '#',
+      url: contactInfo.instagram,
       color: 'hover:text-pink-600',
       bgColor: 'hover:bg-pink-50'
     },
     {
       icon: AiOutlineYoutube,
       name: 'YouTube',
-      url: '#',
+      url: contactInfo.youtube || '#',
       color: 'hover:text-red-600',
       bgColor: 'hover:bg-red-50'
     },
     {
       icon: AiOutlineWechat,
       name: 'Zalo',
-      url: '#',
+      url: `https://zalo.me/${(contactInfo.zalo || contactInfo.phone).replace(/\D/g, '')}`,
       color: 'hover:text-blue-500',
       bgColor: 'hover:bg-blue-50'
     }
@@ -102,10 +140,75 @@ const Contact = () => {
     }))
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    console.log('Contact form submitted:', formData)
-    setIsSubmitted(true)
+    setIsLoading(true)
+    setSubmitError('')
+
+    try {
+      // API URL - sử dụng port 3000 cho server
+      const API_URL = 'http://localhost:3000'
+      
+      console.log('=== DEBUG INFO ===')
+      console.log('API_URL:', API_URL)
+      console.log('Form data:', formData)
+
+      // Gửi email qua server API
+      console.log('Sending request to:', `${API_URL}/api/email/contact`)
+      const emailResponse = await fetch(`${API_URL}/api/email/contact`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      })
+
+      console.log('Email response status:', emailResponse.status)
+      console.log('Email response ok:', emailResponse.ok)
+
+      if (!emailResponse.ok) {
+        const errorData = await emailResponse.json()
+        console.log('Email error data:', errorData)
+        throw new Error(errorData.error || 'Lỗi gửi email')
+      }
+
+      const emailResult = await emailResponse.json()
+      console.log('Email sent successfully:', emailResult)
+
+      // Lưu vào Firebase
+      const docRef = await addDoc(collection(db, 'contact_messages'), {
+        ...formData,
+        createdAt: serverTimestamp(),
+        status: 'new',
+        isRead: false,
+        responseTime: null,
+        ipAddress: null,
+        userAgent: navigator.userAgent
+      })
+
+      console.log('Tin nhắn đã được lưu với ID:', docRef.id)
+      setIsSubmitted(true)
+      
+      // Reset form
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        subject: '',
+        message: '',
+        contactMethod: 'email'
+      })
+
+    } catch (error) {
+      console.error('=== ERROR DETAILS ===')
+      console.error('Error type:', error.constructor.name)
+      console.error('Error message:', error.message)
+      console.error('Error stack:', error.stack)
+      
+      setSubmitError(error.message || 'Có lỗi xảy ra khi gửi tin nhắn. Vui lòng thử lại.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   if (isSubmitted) {
@@ -135,7 +238,7 @@ const Contact = () => {
                 Gửi câu hỏi khác
               </button>
               <a 
-                href="tel:+84123456789"
+                href={`tel:${contactInfo.phone}`}
                 className="border-2 border-purple-500 text-purple-600 px-6 py-3 rounded-lg font-semibold hover:bg-purple-500 hover:text-white transition-all duration-300"
               >
                 Gọi điện ngay
@@ -155,7 +258,7 @@ const Contact = () => {
           Liên hệ
         </h1>
         <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-          Học viên dễ dạng hỏi thông tin. Link mạng xã hội, form để gửi câu hỏi nhanh
+          {contactInfo.description}
         </p>
       </section>
 
@@ -163,7 +266,7 @@ const Contact = () => {
         {/* Contact Info Cards */}
         <section className="mb-16">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {contactInfo.map((contact, index) => {
+            {contactInfoCards.map((contact, index) => {
               const Icon = contact.icon
               return (
                 <div key={index} className="bg-white/60 backdrop-blur-sm rounded-xl p-6 shadow-md hover:shadow-lg transition-all duration-300 border border-white/50 text-center group">
@@ -171,7 +274,18 @@ const Contact = () => {
                     <Icon className="text-2xl text-white" />
                   </div>
                   <h3 className="text-lg font-bold text-gray-800 mb-2">{contact.title}</h3>
-                  <p className="text-gray-700 font-medium mb-1">{contact.info}</p>
+                  {contact.href ? (
+                    <a 
+                      href={contact.href}
+                      className="text-gray-700 font-medium mb-1 hover:text-purple-600 transition-colors block"
+                      target={contact.href.startsWith('http') ? '_blank' : undefined}
+                      rel={contact.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                    >
+                      {contact.info}
+                    </a>
+                  ) : (
+                    <p className="text-gray-700 font-medium mb-1">{contact.info}</p>
+                  )}
                   <p className="text-sm text-gray-500">{contact.subInfo}</p>
                 </div>
               )
@@ -186,6 +300,12 @@ const Contact = () => {
               <h2 className="text-2xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent mb-6">
                 Gửi câu hỏi cho chúng tôi
               </h2>
+
+              {submitError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                  <p className="text-red-600 text-sm">{submitError}</p>
+                </div>
+              )}
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Personal Info */}
@@ -203,6 +323,7 @@ const Contact = () => {
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
                       placeholder="Nhập họ và tên"
+                      disabled={isLoading}
                     />
                   </div>
 
@@ -219,6 +340,7 @@ const Contact = () => {
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
                       placeholder="Nhập số điện thoại"
+                      disabled={isLoading}
                     />
                   </div>
                 </div>
@@ -236,6 +358,7 @@ const Contact = () => {
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
                     placeholder="Nhập địa chỉ email"
+                    disabled={isLoading}
                   />
                 </div>
 
@@ -250,6 +373,7 @@ const Contact = () => {
                     value={formData.subject}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
+                    disabled={isLoading}
                   >
                     <option value="">Chọn chủ đề</option>
                     <option value="course-info">Thông tin khóa học</option>
@@ -277,6 +401,7 @@ const Contact = () => {
                         checked={formData.contactMethod === 'email'}
                         onChange={handleInputChange}
                         className="text-purple-600 focus:ring-purple-500"
+                        disabled={isLoading}
                       />
                       <span className="text-gray-700">Email</span>
                     </label>
@@ -288,6 +413,7 @@ const Contact = () => {
                         checked={formData.contactMethod === 'phone'}
                         onChange={handleInputChange}
                         className="text-purple-600 focus:ring-purple-500"
+                        disabled={isLoading}
                       />
                       <span className="text-gray-700">Điện thoại</span>
                     </label>
@@ -299,6 +425,7 @@ const Contact = () => {
                         checked={formData.contactMethod === 'zalo'}
                         onChange={handleInputChange}
                         className="text-purple-600 focus:ring-purple-500"
+                        disabled={isLoading}
                       />
                       <span className="text-gray-700">Zalo</span>
                     </label>
@@ -310,29 +437,14 @@ const Contact = () => {
                         checked={formData.contactMethod === 'all'}
                         onChange={handleInputChange}
                         className="text-purple-600 focus:ring-purple-500"
+                        disabled={isLoading}
                       />
                       <span className="text-gray-700">Tất cả</span>
                     </label>
                   </div>
                 </div>
 
-                {/* Urgency */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Mức độ ưu tiên
-                  </label>
-                  <select
-                    name="urgency"
-                    value={formData.urgency}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
-                  >
-                    <option value="low">Thấp - Phản hồi trong 24h</option>
-                    <option value="normal">Bình thường - Phản hồi trong 4h</option>
-                    <option value="high">Cao - Phản hồi trong 2h</option>
-                    <option value="urgent">Khẩn cấp - Phản hồi ngay</option>
-                  </select>
-                </div>
+
 
                 {/* Message */}
                 <div>
@@ -348,15 +460,24 @@ const Contact = () => {
                     rows={5}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
                     placeholder="Nhập câu hỏi chi tiết của bạn..."
+                    disabled={isLoading}
                   />
                 </div>
 
                 {/* Submit Button */}
                 <button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-pink-400 to-purple-500 hover:from-pink-500 hover:to-purple-600 text-white font-semibold py-4 px-6 rounded-lg shadow-md transition-all duration-300 text-lg"
+                  disabled={isLoading}
+                  className="w-full bg-gradient-to-r from-pink-400 to-purple-500 hover:from-pink-500 hover:to-purple-600 text-white font-semibold py-4 px-6 rounded-lg shadow-md transition-all duration-300 text-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                 >
-                  Gửi câu hỏi
+                  {isLoading ? (
+                    <>
+                      <AiOutlineLoading3Quarters className="animate-spin mr-2" />
+                      Đang gửi...
+                    </>
+                  ) : (
+                    'Gửi câu hỏi'
+                  )}
                 </button>
               </form>
             </div>
@@ -391,12 +512,14 @@ const Contact = () => {
                 Kết nối với chúng tôi
               </h3>
               <div className="grid grid-cols-2 gap-4">
-                {socialLinks.map((social, index) => {
+                {socialLinks.filter(social => social.url && social.url !== '#').map((social, index) => {
                   const Icon = social.icon
                   return (
                     <a
                       key={index}
                       href={social.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className={`flex items-center space-x-3 p-3 rounded-lg border border-gray-200 ${social.bgColor} ${social.color} transition-all duration-300 group`}
                     >
                       <Icon className="text-xl" />
@@ -409,31 +532,20 @@ const Contact = () => {
 
             {/* Quick Actions */}
             <div className="bg-gradient-to-br from-pink-50 to-purple-50 rounded-xl p-6 border border-pink-200">
-              <h3 className="text-lg font-bold text-gray-800 mb-4">Liên hệ nhanh</h3>
-              <div className="space-y-3">
-                <a
-                  href="tel:+84123456789"
-                  className="flex items-center justify-center space-x-2 bg-green-500 hover:bg-green-600 text-white py-3 px-4 rounded-lg transition-colors"
-                >
-                  <AiOutlinePhone className="text-lg" />
-                  <span className="font-medium">Gọi ngay: 0123 456 789</span>
-                </a>
-                
-                <a
-                  href="mailto:contact@hoctiengduc.com"
-                  className="flex items-center justify-center space-x-2 bg-blue-500 hover:bg-blue-600 text-white py-3 px-4 rounded-lg transition-colors"
-                >
-                  <AiOutlineMail className="text-lg" />
-                  <span className="font-medium">Gửi email</span>
-                </a>
-
-                <a
-                  href="#"
-                  className="flex items-center justify-center space-x-2 bg-blue-400 hover:bg-blue-500 text-white py-3 px-4 rounded-lg transition-colors"
-                >
-                  <AiOutlineWechat className="text-lg" />
-                  <span className="font-medium">Chat qua Zalo</span>
-                </a>
+              <h3 className="text-lg font-bold text-gray-800 mb-4">Thông tin thêm</h3>
+              <div className="space-y-3 text-sm text-gray-600">
+                <div className="flex items-center space-x-2">
+                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                  <span>Tư vấn miễn phí 24/7</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                  <span>Phản hồi nhanh chóng</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                  <span>Hỗ trợ đa ngôn ngữ</span>
+                </div>
               </div>
             </div>
 

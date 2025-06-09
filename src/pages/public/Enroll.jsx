@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
+import { db } from '../../../firebase'
 import { 
   AiOutlineUser, 
   AiOutlinePhone, 
@@ -7,7 +9,8 @@ import {
   AiOutlineCalendar, 
   AiOutlineCheckCircle, 
   AiOutlineClockCircle, 
-  AiOutlineGift 
+  AiOutlineGift,
+  AiOutlineLoading3Quarters
 } from 'react-icons/ai'
 
 const Enroll = () => {
@@ -23,6 +26,8 @@ const Enroll = () => {
   })
 
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [submitError, setSubmitError] = useState('')
 
   const courses = [
     { value: 'a1', label: 'A1 - Tiếng Đức cơ bản (2.500.000 VNĐ)' },
@@ -48,11 +53,72 @@ const Enroll = () => {
     }))
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    // Xử lý submit form ở đây
-    console.log('Form data:', formData)
-    setIsSubmitted(true)
+    setIsLoading(true)
+    setSubmitError('')
+
+    try {
+      // API URL - sử dụng port 5000 cho server  
+      const API_URL = 'http://localhost:3000'
+      
+      console.log('=== ENROLL DEBUG INFO ===')
+      console.log('API_URL:', API_URL)
+      console.log('Form data:', formData)
+
+      // Gửi email qua server API
+      console.log('Sending request to:', `${API_URL}/api/email/enrollment`)
+      const emailResponse = await fetch(`${API_URL}/api/email/enrollment`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      })
+
+      console.log('Email response status:', emailResponse.status)
+
+      if (!emailResponse.ok) {
+        const errorData = await emailResponse.json()
+        console.log('Email error data:', errorData)
+        throw new Error(errorData.error || 'Lỗi gửi email')
+      }
+
+      const emailResult = await emailResponse.json()
+      console.log('Email sent successfully:', emailResult)
+
+      // Lưu vào Firebase
+      const docRef = await addDoc(collection(db, 'enrollments'), {
+        ...formData,
+        createdAt: serverTimestamp(),
+        status: 'new',
+        isProcessed: false,
+        paymentStatus: 'pending',
+        userAgent: navigator.userAgent
+      })
+
+      console.log('Đăng ký đã được lưu với ID:', docRef.id)
+      setIsSubmitted(true)
+      
+      // Reset form
+      setFormData({
+        fullName: '',
+        phone: '',
+        email: '',
+        course: '',
+        schedule: '',
+        experience: '',
+        goals: '',
+        hearAbout: ''
+      })
+
+    } catch (error) {
+      console.error('=== ENROLL ERROR DETAILS ===')
+      console.error('Error:', error)
+      setSubmitError(error.message || 'Có lỗi xảy ra khi đăng ký. Vui lòng thử lại.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   if (isSubmitted) {
@@ -94,7 +160,7 @@ const Enroll = () => {
           Đăng ký học tiếng Đức
         </h1>
         <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-          Biến người truy cập thành học viên với form đăng ký, tùy chọn đăng ký khóa học cụ thể và tích hợp thanh toán (nếu cần)
+          Biến người truy cập thành học viên với form đăng ký, tùy chọn đăng ký khóa học cụ thể
         </p>
       </section>
 
@@ -106,6 +172,12 @@ const Enroll = () => {
               <h2 className="text-2xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent mb-6">
                 Thông tin đăng ký
               </h2>
+
+              {submitError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                  <p className="text-red-600 text-sm">{submitError}</p>
+                </div>
+              )}
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Personal Information */}
@@ -123,6 +195,7 @@ const Enroll = () => {
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
                       placeholder="Nhập họ và tên của bạn"
+                      disabled={isLoading}
                     />
                   </div>
 
@@ -139,6 +212,7 @@ const Enroll = () => {
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
                       placeholder="Nhập số điện thoại"
+                      disabled={isLoading}
                     />
                   </div>
                 </div>
@@ -156,6 +230,7 @@ const Enroll = () => {
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
                     placeholder="Nhập địa chỉ email"
+                    disabled={isLoading}
                   />
                 </div>
 
@@ -171,6 +246,7 @@ const Enroll = () => {
                     value={formData.course}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
+                    disabled={isLoading}
                   >
                     <option value="">Chọn khóa học</option>
                     {courses.map((course) => (
@@ -193,6 +269,7 @@ const Enroll = () => {
                     value={formData.schedule}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
+                    disabled={isLoading}
                   >
                     <option value="">Chọn thời gian học</option>
                     {schedules.map((schedule) => (
@@ -213,6 +290,7 @@ const Enroll = () => {
                     value={formData.experience}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
+                    disabled={isLoading}
                   >
                     <option value="">Chọn trình độ hiện tại</option>
                     <option value="beginner">Hoàn toàn mới bắt đầu</option>
@@ -234,6 +312,7 @@ const Enroll = () => {
                     rows={3}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
                     placeholder="Ví dụ: Học để đi du học, làm việc tại Đức, sở thích cá nhân..."
+                    disabled={isLoading}
                   />
                 </div>
 
@@ -247,6 +326,7 @@ const Enroll = () => {
                     value={formData.hearAbout}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors"
+                    disabled={isLoading}
                   >
                     <option value="">Chọn nguồn thông tin</option>
                     <option value="facebook">Facebook</option>
@@ -261,9 +341,17 @@ const Enroll = () => {
                 <div className="pt-4">
                   <button
                     type="submit"
-                    className="w-full bg-gradient-to-r from-pink-400 to-purple-500 hover:from-pink-500 hover:to-purple-600 text-white font-semibold py-4 px-6 rounded-lg shadow-md transition-all duration-300 text-lg"
+                    disabled={isLoading}
+                    className="w-full bg-gradient-to-r from-pink-400 to-purple-500 hover:from-pink-500 hover:to-purple-600 text-white font-semibold py-4 px-6 rounded-lg shadow-md transition-all duration-300 text-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                   >
-                    Đăng ký ngay
+                    {isLoading ? (
+                      <>
+                        <AiOutlineLoading3Quarters className="animate-spin mr-2" />
+                        Đang xử lý...
+                      </>
+                    ) : (
+                      'Đăng ký ngay'
+                    )}
                   </button>
                   <p className="text-sm text-gray-500 mt-3 text-center">
                     Bằng việc đăng ký, bạn đồng ý với các điều khoản sử dụng của chúng tôi

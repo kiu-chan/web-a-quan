@@ -12,7 +12,8 @@ import {
   FiMail,
   FiUser,
   FiMenu,
-  FiX
+  FiX,
+  FiInfo
 } from 'react-icons/fi'
 
 const PrivateLayout = ({ children }) => {
@@ -36,6 +37,11 @@ const PrivateLayout = ({ children }) => {
       title: 'Quản lý khóa học',
       path: '/admin/courses',
       icon: FiBook
+    },
+    {
+      title: 'Quản lý About',
+      path: '/admin/about',
+      icon: FiInfo
     },
     {
       title: 'Quản lý bài viết',

@@ -1,73 +1,37 @@
 import { Link } from 'react-router-dom'
+import { useCollection } from '../../hooks/useFirestore'
 import { AiOutlineBook, AiOutlineClockCircle, AiOutlineUser, AiOutlineStar, AiOutlineCheckCircle, AiOutlinePlayCircle } from 'react-icons/ai'
 
 const Courses = () => {
-  const courses = [
-    {
-      id: 1,
-      level: 'A1',
-      title: 'Tiếng Đức cơ bản A1',
-      description: 'Khóa học dành cho người mới bắt đầu, giúp bạn làm quen với tiếng Đức từ những kiến thức cơ bản nhất.',
-      duration: '3-4 tháng',
-      lessons: '12 buổi học',
-      price: '2.500.000',
-      features: [
-        'Học alphabet và phát âm',
-        'Từ vựng cơ bản hàng ngày', 
-        'Ngữ pháp căn bản',
-        'Giao tiếp đơn giản'
-      ],
-      color: 'from-pink-400 to-purple-500'
-    },
-    {
-      id: 2,
-      level: 'A2',
-      title: 'Tiếng Đức sơ cấp A2',
-      description: 'Phát triển kỹ năng tiếng Đức cơ bản, có thể giao tiếp trong các tình huống hàng ngày.',
-      duration: '4-5 tháng',
-      lessons: '16 buổi học',
-      price: '3.000.000',
-      features: [
-        'Mở rộng từ vựng',
-        'Ngữ pháp nâng cao',
-        'Luyện nghe - nói',
-        'Viết đoạn văn đơn giản'
-      ],
-      color: 'from-purple-400 to-blue-500'
-    },
-    {
-      id: 3,
-      level: 'B1',
-      title: 'Tiếng Đức trung cấp B1',  
-      description: 'Đạt được khả năng giao tiếp tự tin trong công việc và cuộc sống hàng ngày.',
-      duration: '5-6 tháng',
-      lessons: '20 buổi học',
-      price: '3.500.000',
-      features: [
-        'Giao tiếp thành thạo',
-        'Hiểu văn bản phức tạp',
-        'Thảo luận chủ đề đa dạng',
-        'Chuẩn bị thi B1'
-      ],
-      color: 'from-blue-400 to-indigo-500'
-    },
-    {
-      id: 4,
-      level: 'B2',
-      title: 'Tiếng Đức cao cấp B2',
-      description: 'Đạt trình độ tiếng Đức cao, có thể làm việc và học tập tại môi trường tiếng Đức.',
-      duration: '6-8 tháng',
-      lessons: '24 buổi học',
-      price: '4.000.000',
-      features: [
-        'Giao tiếp chuyên nghiệp',
-        'Viết báo cáo, thư từ',
-        'Hiểu phim, sách tiếng Đức',
-        'Chuẩn bị thi B2'
-      ],
-      color: 'from-indigo-400 to-purple-500'
-    }
-  ]
+  // Lấy dữ liệu từ Firebase
+  const { documents: courses, loading, error } = useCollection('courses')
+
+  // Lọc chỉ các khóa học được kích hoạt và sắp xếp theo level
+  const activeCourses = courses.filter(course => course.active !== false)
+  const sortedCourses = activeCourses.sort((a, b) => {
+    const levelOrder = { 'A1': 1, 'A2': 2, 'B1': 3, 'B2': 4 }
+    return levelOrder[a.level] - levelOrder[b.level]
+  })
+
+  if (loading) {
+    return (
+      <div className="py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="text-xl text-gray-600">Đang tải khóa học...</div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="text-xl text-red-600">Lỗi: {error}</div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="py-12">
@@ -82,89 +46,107 @@ const Courses = () => {
         
         {/* Course Levels Overview */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
-          {['A1', 'A2', 'B1', 'B2'].map((level, index) => (
-            <div key={level} className={`p-4 rounded-lg bg-gradient-to-br ${
-              index === 0 ? 'from-pink-50 to-purple-50 border-pink-200' :
-              index === 1 ? 'from-purple-50 to-blue-50 border-purple-200' :
-              index === 2 ? 'from-blue-50 to-indigo-50 border-blue-200' :
-              'from-indigo-50 to-purple-50 border-indigo-200'
-            } border`}>
-              <div className={`text-2xl font-bold bg-gradient-to-r ${courses[index].color} bg-clip-text text-transparent mb-1`}>
-                {level}
+          {['A1', 'A2', 'B1', 'B2'].map((level, index) => {
+            const courseExists = activeCourses.find(course => course.level === level)
+            return (
+              <div key={level} className={`p-4 rounded-lg bg-gradient-to-br ${
+                index === 0 ? 'from-pink-50 to-purple-50 border-pink-200' :
+                index === 1 ? 'from-purple-50 to-blue-50 border-purple-200' :
+                index === 2 ? 'from-blue-50 to-indigo-50 border-blue-200' :
+                'from-indigo-50 to-purple-50 border-indigo-200'
+              } border ${!courseExists ? 'opacity-50' : ''}`}>
+                <div className={`text-2xl font-bold bg-gradient-to-r ${
+                  index === 0 ? 'from-pink-400 to-purple-500' :
+                  index === 1 ? 'from-purple-400 to-blue-500' :
+                  index === 2 ? 'from-blue-400 to-indigo-500' :
+                  'from-indigo-400 to-purple-500'
+                } bg-clip-text text-transparent mb-1`}>
+                  {level}
+                </div>
+                <div className="text-sm text-gray-600">
+                  {level === 'A1' ? 'Cơ bản' : level === 'A2' ? 'Sơ cấp' : level === 'B1' ? 'Trung cấp' : 'Cao cấp'}
+                </div>
+                {!courseExists && (
+                  <div className="text-xs text-gray-400 mt-1">Sắp ra mắt</div>
+                )}
               </div>
-              <div className="text-sm text-gray-600">
-                {level === 'A1' ? 'Cơ bản' : level === 'A2' ? 'Sơ cấp' : level === 'B1' ? 'Trung cấp' : 'Cao cấp'}
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </section>
 
       {/* Courses Grid */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {courses.map((course) => (
-            <div key={course.id} className="bg-white/60 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-white/50">
-              {/* Course Header */}
-              <div className={`bg-gradient-to-r ${course.color} p-6 text-white`}>
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <span className="bg-white/20 px-3 py-1 rounded-full text-sm font-semibold">
-                      Cấp độ {course.level}
-                    </span>
-                    <h3 className="text-2xl font-bold mt-3">{course.title}</h3>
+        {sortedCourses.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {sortedCourses.map((course) => (
+              <div key={course.id} className="bg-white/60 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-white/50">
+                {/* Course Header */}
+                <div className={`bg-gradient-to-r ${course.color || 'from-pink-400 to-purple-500'} p-6 text-white`}>
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <span className="bg-white/20 px-3 py-1 rounded-full text-sm font-semibold">
+                        Cấp độ {course.level}
+                      </span>
+                      <h3 className="text-2xl font-bold mt-3">{course.title}</h3>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-3xl font-bold">{course.price?.toLocaleString()}</div>
+                      <div className="text-sm opacity-90">VNĐ</div>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-3xl font-bold">{course.price.toLocaleString()}</div>
-                    <div className="text-sm opacity-90">VNĐ</div>
+                  <p className="text-white/90 leading-relaxed">{course.description}</p>
+                </div>
+
+                {/* Course Content */}
+                <div className="p-6">
+                  {/* Course Info */}
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="flex items-center space-x-2 text-gray-600">
+                      <AiOutlineClockCircle className="text-lg" />
+                      <span className="text-sm">{course.duration}</span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-gray-600">
+                      <AiOutlineBook className="text-lg" />
+                      <span className="text-sm">{course.lessons}</span>
+                    </div>
+                  </div>
+
+                  {/* Course Features */}
+                  <div className="mb-6">
+                    <h4 className="font-semibold text-gray-800 mb-3">Nội dung khóa học:</h4>
+                    <ul className="space-y-2">
+                      {course.features?.map((feature, index) => (
+                        <li key={index} className="flex items-center space-x-2 text-gray-600">
+                          <AiOutlineCheckCircle className="text-green-500 flex-shrink-0" />
+                          <span className="text-sm">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex space-x-3">
+                    <Link
+                      to="/enroll"
+                      className={`flex-1 bg-gradient-to-r ${course.color || 'from-pink-400 to-purple-500'} text-white py-3 px-4 rounded-lg text-center font-semibold hover:shadow-lg transition-all duration-300`}
+                    >
+                      Đăng ký ngay
+                    </Link>
+                    <button className="px-4 py-3 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors">
+                      Chi tiết
+                    </button>
                   </div>
                 </div>
-                <p className="text-white/90 leading-relaxed">{course.description}</p>
               </div>
-
-              {/* Course Content */}
-              <div className="p-6">
-                {/* Course Info */}
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div className="flex items-center space-x-2 text-gray-600">
-                    <AiOutlineClockCircle className="text-lg" />
-                    <span className="text-sm">{course.duration}</span>
-                  </div>
-                  <div className="flex items-center space-x-2 text-gray-600">
-                    <AiOutlineBook className="text-lg" />
-                    <span className="text-sm">{course.lessons}</span>
-                  </div>
-                </div>
-
-                {/* Course Features */}
-                <div className="mb-6">
-                  <h4 className="font-semibold text-gray-800 mb-3">Nội dung khóa học:</h4>
-                  <ul className="space-y-2">
-                    {course.features.map((feature, index) => (
-                      <li key={index} className="flex items-center space-x-2 text-gray-600">
-                        <AiOutlineCheckCircle className="text-green-500 flex-shrink-0" />
-                        <span className="text-sm">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex space-x-3">
-                  <Link
-                    to="/enroll"
-                    className={`flex-1 bg-gradient-to-r ${course.color} text-white py-3 px-4 rounded-lg text-center font-semibold hover:shadow-lg transition-all duration-300`}
-                  >
-                    Đăng ký ngay
-                  </Link>
-                  <button className="px-4 py-3 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors">
-                    Chi tiết
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <div className="text-xl text-gray-600 mb-4">Hiện tại chưa có khóa học nào đang mở</div>
+            <p className="text-gray-500">Vui lòng quay lại sau hoặc liên hệ với chúng tôi để biết thêm thông tin</p>
+          </div>
+        )}
       </section>
 
       {/* Additional Info Section */}

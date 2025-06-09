@@ -10,10 +10,11 @@ import Signup from '../pages/auth/Signup'
 import ForgotPassword from '../pages/auth/ForgotPassword'
 
 // Admin Pages
+import AdminAbout from '../pages/admin/AdminAbout'
 import AdminDashboard from '../pages/admin/AdminDashboard'
 import Students from '../pages/admin/Students'
 import AdminCourses from '../pages/admin/AdminCourses'
-import Posts from '../pages/admin/Posts'
+import AdminPosts from '../pages/admin/AdminPosts'
 import Analytics from '../pages/admin/Analytics'
 import Messages from '../pages/admin/Messages'
 import Profile from '../pages/admin/Profile'
@@ -86,13 +87,18 @@ const privateRoutes = [
         layout: PrivateLayout
     },
     {
+        path: '/admin/about',
+        component: AdminAbout,
+        layout: PrivateLayout
+    },
+    {
         path: '/admin/courses',
         component: AdminCourses,
         layout: PrivateLayout
     },
     {
         path: '/admin/posts',
-        component: Posts,
+        component: AdminPosts,
         layout: PrivateLayout
     },
     {

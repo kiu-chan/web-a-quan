@@ -1,4 +1,3 @@
-// hooks/useFirestore.js
 import { useState, useEffect } from 'react'
 import { 
   collection, 
@@ -8,6 +7,7 @@ import {
   addDoc, 
   updateDoc, 
   deleteDoc, 
+  setDoc,
   query, 
   where, 
   orderBy, 
@@ -109,17 +109,52 @@ export const useFirestore = (collectionName) => {
     }
   }
 
-  // Cập nhật document
+  // Cập nhật document (tạo mới nếu chưa tồn tại)
   const updateDocument = async (docId, data) => {
     setLoading(true)
     setError(null)
     
     try {
       const docRef = doc(db, collectionName, docId)
-      await updateDoc(docRef, {
+      
+      // Kiểm tra xem document có tồn tại không
+      const docSnap = await getDoc(docRef)
+      
+      if (docSnap.exists()) {
+        // Document tồn tại - cập nhật
+        await updateDoc(docRef, {
+          ...data,
+          updatedAt: new Date()
+        })
+      } else {
+        // Document chưa tồn tại - tạo mới
+        await setDoc(docRef, {
+          ...data,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+      }
+      
+      setLoading(false)
+    } catch (err) {
+      setError(err.message)
+      setLoading(false)
+      throw err
+    }
+  }
+
+  // Tạo hoặc cập nhật document
+  const setDocument = async (docId, data) => {
+    setLoading(true)
+    setError(null)
+    
+    try {
+      const docRef = doc(db, collectionName, docId)
+      await setDoc(docRef, {
         ...data,
         updatedAt: new Date()
-      })
+      }, { merge: true }) // merge: true để không ghi đè toàn bộ document
+      
       setLoading(false)
     } catch (err) {
       setError(err.message)
@@ -146,6 +181,7 @@ export const useFirestore = (collectionName) => {
   return {
     addDocument,
     updateDocument,
+    setDocument,
     deleteDocument,
     loading,
     error

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useCollection } from '../../hooks/useFirestore'
 import { 
   AiOutlineCalendar, 
   AiOutlineUser, 
@@ -14,125 +15,68 @@ import {
 } from 'react-icons/ai'
 
 const Blog = () => {
+  const { documents: allPosts, loading } = useCollection('blog')
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
 
+  // Lọc chỉ bài viết đã xuất bản
+  const publishedPosts = allPosts.filter(post => post.published)
+
+  // Tính toán categories từ dữ liệu thực tế
+  const categoryCounts = publishedPosts.reduce((acc, post) => {
+    acc[post.category] = (acc[post.category] || 0) + 1
+    return acc
+  }, {})
+
   const categories = [
-    { id: 'all', name: 'Tất cả', count: 24 },
-    { id: 'tips', name: 'Meo học tiếng Đức', count: 8 },
-    { id: 'b1-b2', name: 'Kinh nghiệm thi B1, B2', count: 6 },
-    { id: 'vocabulary', name: 'Từ vựng theo chủ đề', count: 5 },
-    { id: 'culture', name: 'Văn hóa Đức', count: 3 },
-    { id: 'success', name: 'Câu chuyện thành công', count: 2 }
-  ]
+    { id: 'all', name: 'Tất cả', count: publishedPosts.length },
+    { id: 'tips', name: 'Mẹo học tiếng Đức', count: categoryCounts.tips || 0 },
+    { id: 'b1-b2', name: 'Kinh nghiệm thi B1, B2', count: categoryCounts['b1-b2'] || 0 },
+    { id: 'vocabulary', name: 'Từ vựng theo chủ đề', count: categoryCounts.vocabulary || 0 },
+    { id: 'culture', name: 'Văn hóa Đức', count: categoryCounts.culture || 0 },
+    { id: 'success', name: 'Câu chuyện thành công', count: categoryCounts.success || 0 },
+    { id: 'grammar', name: 'Ngữ pháp', count: categoryCounts.grammar || 0 }
+  ].filter(cat => cat.id === 'all' || cat.count > 0)
 
-  const blogPosts = [
-    {
-      id: 1,
-      title: '10 Mẹo học tiếng Đức hiệu quả cho người mới bắt đầu',
-      excerpt: 'Khám phá những phương pháp học tiếng Đức đã được chứng minh hiệu quả, giúp bạn tiến bộ nhanh chóng từ những ngày đầu.',
-      category: 'tips',
-      categoryName: 'Mẹo học tiếng Đức',
-      author: 'Giảng viên Hương',
-      date: '2025-01-15',
-      readTime: '5 phút đọc',
-      views: 1205,
-      likes: 89,
-      comments: 12,
-      thumbnail: 'tips-learning',
-      featured: true,
-      tags: ['mẹo học', 'người mới', 'hiệu quả']
-    },
-    {
-      id: 2,
-      title: 'Cách chuẩn bị thi B1 tiếng Đức - Kinh nghiệm từ học viên đạt 95 điểm',
-      excerpt: 'Chia sẻ chi tiết về quá trình ôn thi B1, từ việc lựa chọn tài liệu đến chiến lược làm bài trong ngày thi.',
-      category: 'b1-b2',
-      categoryName: 'Kinh nghiệm thi B1, B2',
-      author: 'Học viên Mai Anh',
-      date: '2025-01-12',
-      readTime: '8 phút đọc',
-      views: 892,
-      likes: 67,
-      comments: 23,
-      thumbnail: 'b1-exam',
-      featured: true,
-      tags: ['thi B1', 'kinh nghiệm', 'chiến lược']
-    },
-    {
-      id: 3,
-      title: 'Từ vựng tiếng Đức về chủ đề Du lịch - 50 từ quan trọng nhất',
-      excerpt: 'Tổng hợp các từ vựng thiết yếu khi du lịch Đức, từ đặt phòng khách sạn đến hỏi đường và mua sắm.',
-      category: 'vocabulary',
-      categoryName: 'Từ vựng theo chủ đề',
-      author: 'Giảng viên Hương',
-      date: '2025-01-10',
-      readTime: '6 phút đọc',
-      views: 756,
-      likes: 54,
-      comments: 8,
-      thumbnail: 'vocabulary-travel',
-      featured: false,
-      tags: ['từ vựng', 'du lịch', 'thực hành']
-    },
-    {
-      id: 4,
-      title: 'Văn hóa làm việc tại Đức - Những điều cần biết',
-      excerpt: 'Hiểu rõ văn hóa doanh nghiệp Đức để chuẩn bị tốt nhất cho cơ hội làm việc tại đây.',
-      category: 'culture',
-      categoryName: 'Văn hóa Đức',
-      author: 'Chuyên gia Thomas',
-      date: '2025-01-08',
-      readTime: '7 phút đọc',
-      views: 654,
-      likes: 43,
-      comments: 15,
-      thumbnail: 'german-culture',
-      featured: false,
-      tags: ['văn hóa', 'làm việc', 'germany']
-    },
-    {
-      id: 5,
-      title: 'Từ A1 lên B2 trong 18 tháng - Câu chuyện của học viên Minh',
-      excerpt: 'Hành trình học tiếng Đức đầy cảm hứng của một kỹ sư IT, từ không biết gì đến đạt B2 và nhận được visa làm việc.',
-      category: 'success',
-      categoryName: 'Câu chuyện thành công',
-      author: 'Học viên Minh',
-      date: '2025-01-05',
-      readTime: '10 phút đọc',
-      views: 1123,
-      likes: 98,
-      comments: 31,
-      thumbnail: 'success-story',
-      featured: true,
-      tags: ['thành công', 'động lực', 'visa']
-    },
-    {
-      id: 6,
-      title: 'Lỗi ngữ pháp phổ biến người Việt thường mắc khi học tiếng Đức',
-      excerpt: 'Phân tích những lỗi sai thường gặp và cách khắc phục hiệu quả để cải thiện khả năng giao tiếp.',
-      category: 'tips',
-      categoryName: 'Mẹo học tiếng Đức',
-      author: 'Giảng viên Hương',
-      date: '2025-01-03',
-      readTime: '6 phút đọc',
-      views: 567,
-      likes: 41,
-      comments: 9,
-      thumbnail: 'grammar-mistakes',
-      featured: false,
-      tags: ['ngữ pháp', 'lỗi sai', 'cải thiện']
-    }
-  ]
-
-  const filteredPosts = blogPosts.filter(post => {
+  const filteredPosts = publishedPosts.filter(post => {
     const matchesCategory = selectedCategory === 'all' || post.category === selectedCategory
     const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         post.excerpt.toLowerCase().includes(searchQuery.toLowerCase())
+                         post.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (post.tags && post.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())))
     return matchesCategory && matchesSearch
   })
 
-  const featuredPosts = blogPosts.filter(post => post.featured)
+  const featuredPosts = publishedPosts.filter(post => post.featured)
+
+  const formatDate = (date) => {
+    if (!date) return ''
+    const d = date.toDate ? date.toDate() : new Date(date)
+    return d.toLocaleDateString('vi-VN')
+  }
+
+  const getCategoryName = (category) => {
+    const categoryMap = {
+      'tips': 'Mẹo học tiếng Đức',
+      'b1-b2': 'Kinh nghiệm thi B1, B2',
+      'vocabulary': 'Từ vựng theo chủ đề',
+      'culture': 'Văn hóa Đức',
+      'success': 'Câu chuyện thành công',
+      'grammar': 'Ngữ pháp',
+      'pronunciation': 'Phát âm',
+      'study-abroad': 'Du học Đức'
+    }
+    return categoryMap[category] || category
+  }
+
+  if (loading) {
+    return (
+      <div className="py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="text-xl text-gray-600">Đang tải bài viết...</div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="py-12">
@@ -163,7 +107,7 @@ const Blog = () => {
           {/* Main Content */}
           <div className="lg:col-span-3">
             {/* Featured Posts */}
-            {selectedCategory === 'all' && (
+            {selectedCategory === 'all' && featuredPosts.length > 0 && (
               <section className="mb-12">
                 <h2 className="text-2xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent mb-6">
                   Bài viết nổi bật
@@ -173,7 +117,15 @@ const Blog = () => {
                     <article key={post.id} className="bg-white/60 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-white/50 group">
                       {/* Thumbnail */}
                       <div className="h-48 bg-gradient-to-br from-pink-200 via-purple-200 to-blue-200 flex items-center justify-center relative overflow-hidden">
-                        <span className="text-purple-600 font-medium">{post.thumbnail}</span>
+                        {post.thumbnail ? (
+                          <img 
+                            src={post.thumbnail} 
+                            alt={post.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-purple-600 font-medium">{post.category}</span>
+                        )}
                         <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                           <AiOutlineEye className="text-white text-2xl" />
                         </div>
@@ -182,7 +134,7 @@ const Blog = () => {
                       <div className="p-6">
                         {/* Category */}
                         <span className="inline-block bg-gradient-to-r from-pink-100 to-purple-100 text-purple-600 px-3 py-1 rounded-full text-sm font-medium mb-3 border border-purple-200">
-                          {post.categoryName}
+                          {getCategoryName(post.category)}
                         </span>
 
                         {/* Title */}
@@ -204,26 +156,37 @@ const Blog = () => {
                             </span>
                             <span className="flex items-center">
                               <AiOutlineCalendar className="mr-1" />
-                              {new Date(post.date).toLocaleDateString('vi-VN')}
+                              {formatDate(post.createdAt)}
                             </span>
                           </div>
-                          <span>{post.readTime}</span>
+                          <span>{post.readTime || 1} phút đọc</span>
                         </div>
+
+                        {/* Tags */}
+                        {post.tags && post.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-4">
+                            {post.tags.slice(0, 3).map((tag, index) => (
+                              <span key={index} className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs">
+                                #{tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
 
                         {/* Stats */}
                         <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                           <div className="flex items-center space-x-4 text-sm text-gray-500">
                             <span className="flex items-center">
                               <AiOutlineEye className="mr-1" />
-                              {post.views}
+                              {post.views || 0}
                             </span>
                             <span className="flex items-center">
                               <AiOutlineHeart className="mr-1" />
-                              {post.likes}
+                              {post.likes || 0}
                             </span>
                             <span className="flex items-center">
                               <AiOutlineComment className="mr-1" />
-                              {post.comments}
+                              {post.comments || 0}
                             </span>
                           </div>
                           <button className="text-purple-600 hover:text-purple-700 font-medium">
@@ -248,85 +211,113 @@ const Blog = () => {
                 </span>
               </div>
 
-              <div className="space-y-6">
-                {filteredPosts.map((post) => (
-                  <article key={post.id} className="bg-white/60 backdrop-blur-sm rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border border-white/50 group">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 p-6">
-                      {/* Thumbnail */}
-                      <div className="h-40 bg-gradient-to-br from-pink-200 via-purple-200 to-blue-200 rounded-lg flex items-center justify-center relative overflow-hidden">
-                        <span className="text-purple-600 font-medium text-sm">{post.thumbnail}</span>
-                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                          <AiOutlineEye className="text-white text-xl" />
-                        </div>
-                      </div>
-
-                      {/* Content */}
-                      <div className="md:col-span-3">
-                        {/* Category */}
-                        <span className="inline-block bg-gradient-to-r from-pink-100 to-purple-100 text-purple-600 px-3 py-1 rounded-full text-sm font-medium mb-3 border border-purple-200">
-                          {post.categoryName}
-                        </span>
-
-                        {/* Title */}
-                        <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-purple-600 transition-colors">
-                          {post.title}
-                        </h3>
-
-                        {/* Excerpt */}
-                        <p className="text-gray-600 mb-4">
-                          {post.excerpt}
-                        </p>
-
-                        {/* Tags */}
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          {post.tags.map((tag, index) => (
-                            <span key={index} className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-sm">
-                              #{tag}
-                            </span>
-                          ))}
-                        </div>
-
-                        {/* Meta Info */}
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-4 text-sm text-gray-500">
-                            <span className="flex items-center">
-                              <AiOutlineUser className="mr-1" />
-                              {post.author}
-                            </span>
-                            <span className="flex items-center">
-                              <AiOutlineCalendar className="mr-1" />
-                              {new Date(post.date).toLocaleDateString('vi-VN')}
-                            </span>
-                            <span>{post.readTime}</span>
-                          </div>
-
-                          <div className="flex items-center space-x-4 text-sm text-gray-500">
-                            <span className="flex items-center">
-                              <AiOutlineEye className="mr-1" />
-                              {post.views}
-                            </span>
-                            <span className="flex items-center">
-                              <AiOutlineHeart className="mr-1" />
-                              {post.likes}
-                            </span>
-                            <span className="flex items-center">
-                              <AiOutlineComment className="mr-1" />
-                              {post.comments}
-                            </span>
+              {filteredPosts.length > 0 ? (
+                <div className="space-y-6">
+                  {filteredPosts.map((post) => (
+                    <article key={post.id} className="bg-white/60 backdrop-blur-sm rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border border-white/50 group">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 p-6">
+                        {/* Thumbnail */}
+                        <div className="h-40 bg-gradient-to-br from-pink-200 via-purple-200 to-blue-200 rounded-lg flex items-center justify-center relative overflow-hidden">
+                          {post.thumbnail ? (
+                            <img 
+                              src={post.thumbnail} 
+                              alt={post.title}
+                              className="w-full h-full object-cover rounded-lg"
+                            />
+                          ) : (
+                            <span className="text-purple-600 font-medium text-sm">{post.category}</span>
+                          )}
+                          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                            <AiOutlineEye className="text-white text-xl" />
                           </div>
                         </div>
+
+                        {/* Content */}
+                        <div className="md:col-span-3">
+                          {/* Category */}
+                          <span className="inline-block bg-gradient-to-r from-pink-100 to-purple-100 text-purple-600 px-3 py-1 rounded-full text-sm font-medium mb-3 border border-purple-200">
+                            {getCategoryName(post.category)}
+                          </span>
+
+                          {/* Title */}
+                          <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-purple-600 transition-colors">
+                            {post.title}
+                          </h3>
+
+                          {/* Excerpt */}
+                          <p className="text-gray-600 mb-4">
+                            {post.excerpt}
+                          </p>
+
+                          {/* Tags */}
+                          {post.tags && post.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mb-4">
+                              {post.tags.map((tag, index) => (
+                                <span key={index} className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-sm">
+                                  #{tag}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Meta Info */}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4 text-sm text-gray-500">
+                              <span className="flex items-center">
+                                <AiOutlineUser className="mr-1" />
+                                {post.author}
+                              </span>
+                              <span className="flex items-center">
+                                <AiOutlineCalendar className="mr-1" />
+                                {formatDate(post.createdAt)}
+                              </span>
+                              <span>{post.readTime || 1} phút đọc</span>
+                            </div>
+
+                            <div className="flex items-center space-x-4 text-sm text-gray-500">
+                              <span className="flex items-center">
+                                <AiOutlineEye className="mr-1" />
+                                {post.views || 0}
+                              </span>
+                              <span className="flex items-center">
+                                <AiOutlineHeart className="mr-1" />
+                                {post.likes || 0}
+                              </span>
+                              <span className="flex items-center">
+                                <AiOutlineComment className="mr-1" />
+                                {post.comments || 0}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </article>
-                ))}
-              </div>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="text-xl text-gray-600 mb-4">
+                    {searchQuery ? 'Không tìm thấy bài viết nào' : 'Chưa có bài viết nào trong danh mục này'}
+                  </div>
+                  {searchQuery && (
+                    <button 
+                      onClick={() => setSearchQuery('')}
+                      className="text-purple-600 hover:text-purple-700"
+                    >
+                      Xóa bộ lọc
+                    </button>
+                  )}
+                </div>
+              )}
 
               {/* Load More */}
-              <div className="text-center mt-12">
-                <button className="bg-gradient-to-r from-pink-400 to-purple-500 hover:from-pink-500 hover:to-purple-600 text-white px-8 py-3 rounded-lg font-semibold transition-all duration-300">
-                  Xem thêm bài viết
-                </button>
-              </div>
+              {filteredPosts.length > 0 && (
+                <div className="text-center mt-12">
+                  <button className="bg-gradient-to-r from-pink-400 to-purple-500 hover:from-pink-500 hover:to-purple-600 text-white px-8 py-3 rounded-lg font-semibold transition-all duration-300">
+                    Xem thêm bài viết
+                  </button>
+                </div>
+              )}
             </section>
           </div>
 
@@ -362,19 +353,30 @@ const Blog = () => {
                 Bài viết phổ biến
               </h3>
               <div className="space-y-4">
-                {blogPosts.slice(0, 4).map((post) => (
+                {publishedPosts
+                  .sort((a, b) => (b.views || 0) - (a.views || 0))
+                  .slice(0, 4)
+                  .map((post) => (
                   <div key={post.id} className="flex space-x-3 group cursor-pointer">
-                    <div className="w-16 h-16 bg-gradient-to-br from-pink-100 to-purple-100 rounded-lg flex-shrink-0 flex items-center justify-center">
-                      <AiOutlineBook className="text-purple-500" />
+                    <div className="w-16 h-16 bg-gradient-to-br from-pink-100 to-purple-100 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden">
+                      {post.thumbnail ? (
+                        <img 
+                          src={post.thumbnail} 
+                          alt={post.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <AiOutlineBook className="text-purple-500" />
+                      )}
                     </div>
                     <div className="flex-1">
                       <h4 className="text-sm font-medium text-gray-800 group-hover:text-purple-600 transition-colors line-clamp-2">
                         {post.title}
                       </h4>
                       <div className="flex items-center space-x-2 text-xs text-gray-500 mt-1">
-                        <span>{post.views} lượt xem</span>
+                        <span>{post.views || 0} lượt xem</span>
                         <span>•</span>
-                        <span>{new Date(post.date).toLocaleDateString('vi-VN')}</span>
+                        <span>{formatDate(post.createdAt)}</span>
                       </div>
                     </div>
                   </div>
