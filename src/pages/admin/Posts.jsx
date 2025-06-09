@@ -9,15 +9,16 @@ const Posts = () => {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Quản lý bài viết</h2>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center hover:bg-blue-700 transition-colors">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+        <h2 className="text-xl lg:text-2xl font-bold text-gray-800">Quản lý bài viết</h2>
+        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center justify-center hover:bg-blue-700 transition-colors w-full sm:w-auto">
           <FiPlus className="w-4 h-4 mr-2" />
           Viết bài mới
         </button>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      {/* Desktop Table */}
+      <div className="hidden lg:block bg-white rounded-lg shadow-md overflow-hidden">
         <table className="w-full">
           <thead className="bg-gray-50">
             <tr>
@@ -55,6 +56,35 @@ const Posts = () => {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile/Tablet Cards */}
+      <div className="lg:hidden space-y-4">
+        {posts.map((post) => (
+          <div key={post.id} className="bg-white rounded-lg shadow-md p-4">
+            <div className="flex justify-between items-start mb-3">
+              <h3 className="text-base font-medium text-gray-900 flex-1 mr-2">{post.title}</h3>
+              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full whitespace-nowrap ${
+                post.status === 'Công khai' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+              }`}>
+                {post.status}
+              </span>
+            </div>
+            <div className="text-sm text-gray-600 mb-4 space-y-1">
+              <p>Tác giả: <span className="font-medium">{post.author}</span></p>
+              <p>Ngày tạo: <span className="font-medium">{post.date}</span></p>
+            </div>
+            <div className="flex space-x-2">
+              <button className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg text-sm hover:bg-blue-700 transition-colors flex items-center justify-center">
+                <FiEdit2 className="w-4 h-4 mr-1" />
+                Sửa
+              </button>
+              <button className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors">
+                <FiTrash2 className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   )

@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
+import { useState } from 'react'
 import { 
   FiHome, 
   FiUsers, 
@@ -8,11 +9,14 @@ import {
   FiLogOut,
   FiBarChart,
   FiMail,
-  FiUser
+  FiUser,
+  FiMenu,
+  FiX
 } from 'react-icons/fi'
 
 const PrivateLayout = ({ children }) => {
   const location = useLocation()
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const menuItems = [
     {
@@ -64,15 +68,35 @@ const PrivateLayout = ({ children }) => {
     return location.pathname.startsWith(path)
   }
 
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen)
+  }
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false)
+  }
+
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="flex">
         {/* Sidebar */}
-        <aside className="w-64 bg-white shadow-lg fixed h-full overflow-y-auto">
+        <aside className={`w-64 bg-white shadow-lg fixed h-full overflow-y-auto z-30 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+          isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}>
           {/* Header */}
           <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-bold text-gray-800">Admin Panel</h2>
-            <p className="text-sm text-gray-600 mt-1">Quản trị hệ thống</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold text-gray-800">Admin Panel</h2>
+                <p className="text-sm text-gray-600 mt-1">Quản trị hệ thống</p>
+              </div>
+              <button
+                onClick={closeMobileMenu}
+                className="lg:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+              >
+                <FiX className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
           {/* Navigation Menu */}
@@ -89,6 +113,7 @@ const PrivateLayout = ({ children }) => {
                 <Link
                   key={index}
                   to={item.path}
+                  onClick={closeMobileMenu}
                   className={`flex items-center px-6 py-3 text-sm font-medium transition-colors duration-200 ${
                     isActive(item.path)
                       ? 'bg-blue-50 text-blue-700 border-r-4 border-blue-700'
@@ -122,19 +147,35 @@ const PrivateLayout = ({ children }) => {
           </div>
         </aside>
 
+        {/* Mobile overlay */}
+        {isMobileMenuOpen && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
+            onClick={closeMobileMenu}
+          />
+        )}
+
         {/* Main Content */}
-        <main className="flex-1 ml-64">
+        <main className="flex-1 lg:ml-64">
           {/* Top Header */}
           <header className="bg-white shadow-sm border-b border-gray-200">
-            <div className="px-8 py-4">
+            <div className="px-4 lg:px-8 py-4">
               <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-lg font-semibold text-gray-800">
-                    {menuItems.find(item => isActive(item.path))?.title || 'Admin Dashboard'}
-                  </h1>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Chào mừng quay trở lại!
-                  </p>
+                <div className="flex items-center">
+                  <button
+                    onClick={toggleMobileMenu}
+                    className="lg:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 mr-3"
+                  >
+                    <FiMenu className="w-5 h-5" />
+                  </button>
+                  <div>
+                    <h1 className="text-lg font-semibold text-gray-800">
+                      {menuItems.find(item => isActive(item.path))?.title || 'Admin Dashboard'}
+                    </h1>
+                    <p className="text-sm text-gray-600 mt-1 hidden sm:block">
+                      Chào mừng quay trở lại!
+                    </p>
+                  </div>
                 </div>
                 <div className="flex items-center space-x-4">
                   <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200">
@@ -149,7 +190,7 @@ const PrivateLayout = ({ children }) => {
           </header>
 
           {/* Page Content */}
-          <div className="p-8">
+          <div className="p-4 lg:p-8">
             {children}
           </div>
         </main>

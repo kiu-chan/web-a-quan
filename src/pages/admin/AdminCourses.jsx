@@ -9,20 +9,20 @@ const AdminCourses = () => {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Quản lý khóa học</h2>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center hover:bg-blue-700 transition-colors">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+        <h2 className="text-xl lg:text-2xl font-bold text-gray-800">Quản lý khóa học</h2>
+        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center justify-center hover:bg-blue-700 transition-colors w-full sm:w-auto">
           <FiPlus className="w-4 h-4 mr-2" />
           Thêm khóa học
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
         {courses.map((course) => (
-          <div key={course.id} className="bg-white rounded-lg shadow-md p-6">
+          <div key={course.id} className="bg-white rounded-lg shadow-md p-4 lg:p-6">
             <div className="flex justify-between items-start mb-4">
-              <h3 className="text-lg font-semibold text-gray-800">{course.title}</h3>
-              <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+              <h3 className="text-base lg:text-lg font-semibold text-gray-800 flex-1 mr-2">{course.title}</h3>
+              <span className={`px-2 py-1 text-xs font-semibold rounded-full whitespace-nowrap ${
                 course.status === 'Đang mở' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
               }`}>
                 {course.status}
@@ -32,12 +32,12 @@ const AdminCourses = () => {
               <p className="text-sm text-gray-600">Học viên: <span className="font-medium">{course.students}</span></p>
               <p className="text-sm text-gray-600">Giá: <span className="font-medium text-green-600">{course.price}đ</span></p>
             </div>
-            <div className="flex space-x-2">
-              <button className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg text-sm hover:bg-blue-700 transition-colors">
-                <FiEdit2 className="w-4 h-4 inline mr-1" />
+            <div className="flex flex-col sm:flex-row gap-2">
+              <button className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg text-sm hover:bg-blue-700 transition-colors flex items-center justify-center">
+                <FiEdit2 className="w-4 h-4 mr-1" />
                 Chỉnh sửa
               </button>
-              <button className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors">
+              <button className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors flex items-center justify-center sm:w-auto">
                 <FiTrash2 className="w-4 h-4" />
               </button>
             </div>
