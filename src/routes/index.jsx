@@ -13,7 +13,7 @@ import ForgotPassword from '../pages/auth/ForgotPassword'
 import AdminDashboard from '../pages/admin/AdminDashboard'
 
 // Layouts
-import PublicLayout from '../layouts/PublicLayout'
+import PublicLayout from '../layouts/public/PublicLayout'
 import PrivateLayout from '../layouts/PrivateLayout'
 import AuthLayout from '../layouts/AuthLayout'
 

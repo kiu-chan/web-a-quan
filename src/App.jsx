@@ -1,11 +1,15 @@
+// App.jsx
 import AppRouter from './routes/AppRouter'
 import { AuthProvider } from './contexts/AuthContext'
+import { LanguageProvider } from './contexts/LanguageContext'
 
 function App() {
   return (
-    <AuthProvider>
-      <AppRouter />
-    </AuthProvider>
+    <LanguageProvider>
+      <AuthProvider>
+        <AppRouter />
+      </AuthProvider>
+    </LanguageProvider>
   )
 }
 
