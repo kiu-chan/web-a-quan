@@ -11,6 +11,13 @@ import ForgotPassword from '../pages/auth/ForgotPassword'
 
 // Admin Pages
 import AdminDashboard from '../pages/admin/AdminDashboard'
+import Students from '../pages/admin/Students'
+import AdminCourses from '../pages/admin/AdminCourses'
+import Posts from '../pages/admin/Posts'
+import Analytics from '../pages/admin/Analytics'
+import Messages from '../pages/admin/Messages'
+import Profile from '../pages/admin/Profile'
+import Settings from '../pages/admin/Settings'
 
 // Layouts
 import PublicLayout from '../layouts/public/PublicLayout'
@@ -49,7 +56,6 @@ const publicRoutes = [
         component: Contact,
         layout: PublicLayout
     },
-    // Auth routes
     {
         path: '/login',
         component: Login,
@@ -72,6 +78,41 @@ const privateRoutes = [
     {
         path: '/admin',
         component: AdminDashboard,
+        layout: PrivateLayout
+    },
+    {
+        path: '/admin/students',
+        component: Students,
+        layout: PrivateLayout
+    },
+    {
+        path: '/admin/courses',
+        component: AdminCourses,
+        layout: PrivateLayout
+    },
+    {
+        path: '/admin/posts',
+        component: Posts,
+        layout: PrivateLayout
+    },
+    {
+        path: '/admin/analytics',
+        component: Analytics,
+        layout: PrivateLayout
+    },
+    {
+        path: '/admin/messages',
+        component: Messages,
+        layout: PrivateLayout
+    },
+    {
+        path: '/admin/profile',
+        component: Profile,
+        layout: PrivateLayout
+    },
+    {
+        path: '/admin/settings',
+        component: Settings,
         layout: PrivateLayout
     }
 ]
