@@ -10,7 +10,8 @@ import {
   updateProfile,
   sendPasswordResetEmail
 } from 'firebase/auth'
-import { auth } from '../../firebase'
+import { doc, setDoc, getDoc } from 'firebase/firestore'
+import { auth, db } from '../../firebase'
 
 const AuthContext = createContext()
 
@@ -32,6 +33,40 @@ export const AuthProvider = ({ children }) => {
     prompt: 'select_account'
   })
 
+  // Tạo user document trong Firestore
+  const createUserDocument = async (user, additionalData = {}) => {
+    if (!user) return
+    
+    const userRef = doc(db, 'users', user.uid)
+    const userDoc = await getDoc(userRef)
+    
+    if (!userDoc.exists()) {
+      const { displayName, email, photoURL } = user
+      const createdAt = new Date()
+      
+      const userData = {
+        displayName: displayName || '',
+        email,
+        photoURL: photoURL || '',
+        role: 'user', // Mặc định là user, admin sẽ set thủ công
+        createdAt,
+        updatedAt: createdAt,
+        ...additionalData
+      }
+      
+      try {
+        await setDoc(userRef, userData)
+        console.log('Created user document:', userData)
+        return userData
+      } catch (error) {
+        console.error('Lỗi tạo user document:', error)
+        return { role: 'user' }
+      }
+    }
+    
+    return userDoc.data()
+  }
+
   // Đăng ký tài khoản mới
   const signup = async (email, password, displayName = '') => {
     try {
@@ -39,6 +74,10 @@ export const AuthProvider = ({ children }) => {
       if (displayName) {
         await updateProfile(result.user, { displayName })
       }
+      
+      // Tạo user document trong Firestore
+      await createUserDocument(result.user, { displayName })
+      
       return result
     } catch (error) {
       throw error
@@ -46,13 +85,31 @@ export const AuthProvider = ({ children }) => {
   }
 
   // Đăng nhập
-  const signin = (email, password) => {
-    return signInWithEmailAndPassword(auth, email, password)
+  const signin = async (email, password) => {
+    try {
+      const result = await signInWithEmailAndPassword(auth, email, password)
+      
+      // Tạo user document nếu chưa có (cho trường hợp user cũ)
+      await createUserDocument(result.user)
+      
+      return result
+    } catch (error) {
+      throw error
+    }
   }
 
   // Đăng nhập với Google
-  const signinWithGoogle = () => {
-    return signInWithPopup(auth, googleProvider)
+  const signinWithGoogle = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider)
+      
+      // Tạo user document trong Firestore
+      await createUserDocument(result.user)
+      
+      return result
+    } catch (error) {
+      throw error
+    }
   }
 
   // Đăng xuất
@@ -71,8 +128,41 @@ export const AuthProvider = ({ children }) => {
   }
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setCurrentUser(user)
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log('Auth state changed:', user?.email)
+      
+      if (user) {
+        try {
+          // Lấy thông tin user từ Firestore
+          const userRef = doc(db, 'users', user.uid)
+          const userDoc = await getDoc(userRef)
+          
+          let userData
+          if (userDoc.exists()) {
+            userData = userDoc.data()
+            console.log('User data from Firestore:', userData)
+          } else {
+            console.log('User doc not found, creating...')
+            // Tạo document nếu chưa có và lấy dữ liệu
+            userData = await createUserDocument(user)
+          }
+          
+          setCurrentUser({
+            ...user,
+            role: userData.role || 'user'
+          })
+          
+          console.log('Final user role:', userData.role || 'user')
+        } catch (error) {
+          console.error('Error fetching user data:', error)
+          setCurrentUser({
+            ...user,
+            role: 'user'
+          })
+        }
+      } else {
+        setCurrentUser(null)
+      }
       setLoading(false)
     })
 
@@ -81,6 +171,7 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     currentUser,
+    loading,
     signup,
     signin,
     signinWithGoogle,

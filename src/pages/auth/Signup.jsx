@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { 
@@ -22,8 +22,19 @@ const Signup = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const { signup, signinWithGoogle } = useAuth()
+  const { signup, signinWithGoogle, currentUser, loading: authLoading } = useAuth()
   const navigate = useNavigate()
+
+  // Tự động chuyển hướng khi đăng ký thành công và role đã được load
+  useEffect(() => {
+    if (currentUser && !authLoading) {
+      if (currentUser.role === 'admin') {
+        navigate('/admin')
+      } else {
+        navigate('/')
+      }
+    }
+  }, [currentUser, authLoading, navigate])
 
   const handleChange = (e) => {
     setFormData({
@@ -67,7 +78,7 @@ const Signup = () => {
 
     try {
       await signup(formData.email, formData.password, formData.displayName)
-      navigate('/')
+      // Chuyển hướng sẽ được xử lý trong useEffect
     } catch (error) {
       switch (error.code) {
         case 'auth/email-already-in-use':
@@ -93,7 +104,7 @@ const Signup = () => {
 
     try {
       await signinWithGoogle()
-      navigate('/')
+      // Chuyển hướng sẽ được xử lý trong useEffect
     } catch (error) {
       setError('Đăng ký Google thất bại. Vui lòng thử lại')
     }

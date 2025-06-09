@@ -9,6 +9,9 @@ import Login from '../pages/auth/Login'
 import Signup from '../pages/auth/Signup'
 import ForgotPassword from '../pages/auth/ForgotPassword'
 
+// Admin Pages
+import AdminDashboard from '../pages/admin/AdminDashboard'
+
 // Layouts
 import PublicLayout from '../layouts/PublicLayout'
 import PrivateLayout from '../layouts/PrivateLayout'
@@ -66,7 +69,11 @@ const publicRoutes = [
 
 // Routes yêu cầu đăng nhập
 const privateRoutes = [
-    // Private routes sẽ thêm sau
+    {
+        path: '/admin',
+        component: AdminDashboard,
+        layout: PrivateLayout
+    }
 ]
 
 export { publicRoutes, privateRoutes }

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { 
@@ -18,8 +18,19 @@ const Login = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const { signin, signinWithGoogle } = useAuth()
+  const { signin, signinWithGoogle, currentUser, loading: authLoading } = useAuth()
   const navigate = useNavigate()
+
+  // Tự động chuyển hướng khi đăng nhập thành công và role đã được load
+  useEffect(() => {
+    if (currentUser && !authLoading) {
+      if (currentUser.role === 'admin') {
+        navigate('/admin')
+      } else {
+        navigate('/')
+      }
+    }
+  }, [currentUser, authLoading, navigate])
 
   const handleChange = (e) => {
     setFormData({
@@ -42,7 +53,7 @@ const Login = () => {
 
     try {
       await signin(formData.email, formData.password)
-      navigate('/')
+      // Chuyển hướng sẽ được xử lý trong useEffect của AuthContext
     } catch (error) {
       switch (error.code) {
         case 'auth/user-not-found':
@@ -71,7 +82,7 @@ const Login = () => {
 
     try {
       await signinWithGoogle()
-      navigate('/')
+      // Chuyển hướng sẽ được xử lý trong useEffect của AuthContext
     } catch (error) {
       setError('Đăng nhập Google thất bại. Vui lòng thử lại')
     }
