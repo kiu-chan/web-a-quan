@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useState } from 'react'
+import { useAuth } from '../contexts/AuthContext'
 import { 
   FiHome, 
   FiUsers, 
@@ -16,7 +17,9 @@ import {
 
 const PrivateLayout = ({ children }) => {
   const location = useLocation()
+  const { currentUser, logout } = useAuth()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [imageError, setImageError] = useState(false)
 
   const menuItems = [
     {
@@ -76,6 +79,32 @@ const PrivateLayout = ({ children }) => {
     setIsMobileMenuOpen(false)
   }
 
+  const handleLogout = async () => {
+    try {
+      await logout()
+    } catch (error) {
+      console.error('Lỗi đăng xuất:', error)
+    }
+  }
+
+  // Lấy tên hiển thị và email từ currentUser
+  const displayName = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'Admin'
+  const email = currentUser?.email || 'admin@example.com'
+  const userInitial = displayName.charAt(0).toUpperCase()
+
+  // Lấy avatar URL nếu có và xử lý lỗi
+  const avatarUrl = currentUser?.photoURL
+  const showAvatar = avatarUrl && !imageError
+
+  const handleImageError = () => {
+    setImageError(true)
+  }
+
+  // Debug log để kiểm tra
+  console.log('Current User:', currentUser)
+  console.log('Avatar URL:', avatarUrl)
+  console.log('Show Avatar:', showAvatar)
+
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="flex">
@@ -92,7 +121,7 @@ const PrivateLayout = ({ children }) => {
               </div>
               <button
                 onClick={closeMobileMenu}
-                className="lg:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                className="lg:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors duration-200"
               >
                 <FiX className="w-5 h-5" />
               </button>
@@ -131,15 +160,32 @@ const PrivateLayout = ({ children }) => {
           <div className="absolute bottom-0 w-full border-t border-gray-200 bg-white">
             <div className="p-4">
               <div className="flex items-center mb-3">
-                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">A</span>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-700">Admin User</p>
-                  <p className="text-xs text-gray-500">admin@example.com</p>
+                {showAvatar ? (
+                  <img 
+                    src={avatarUrl} 
+                    alt="Avatar"
+                    className="w-8 h-8 rounded-full object-cover border-2 border-gray-200"
+                    onError={handleImageError}
+                    onLoad={() => console.log('Image loaded successfully')}
+                  />
+                ) : (
+                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center border-2 border-gray-200">
+                    <span className="text-white text-sm font-medium">{userInitial}</span>
+                  </div>
+                )}
+                <div className="ml-3 flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-700 truncate">
+                    {displayName}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate">
+                    {email}
+                  </p>
                 </div>
               </div>
-              <button className="flex items-center w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors duration-200">
+              <button 
+                onClick={handleLogout}
+                className="flex items-center w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors duration-200"
+              >
                 <FiLogOut className="w-4 h-4 mr-2" />
                 Đăng xuất
               </button>
@@ -164,7 +210,7 @@ const PrivateLayout = ({ children }) => {
                 <div className="flex items-center">
                   <button
                     onClick={toggleMobileMenu}
-                    className="lg:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 mr-3"
+                    className="lg:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 mr-3 transition-colors duration-200"
                   >
                     <FiMenu className="w-5 h-5" />
                   </button>
@@ -173,7 +219,7 @@ const PrivateLayout = ({ children }) => {
                       {menuItems.find(item => isActive(item.path))?.title || 'Admin Dashboard'}
                     </h1>
                     <p className="text-sm text-gray-600 mt-1 hidden sm:block">
-                      Chào mừng quay trở lại!
+                      Chào mừng {displayName} quay trở lại!
                     </p>
                   </div>
                 </div>
@@ -181,9 +227,18 @@ const PrivateLayout = ({ children }) => {
                   <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200">
                     <FiMail className="w-5 h-5" />
                   </button>
-                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-sm font-medium">A</span>
-                  </div>
+                  {showAvatar ? (
+                    <img 
+                      src={avatarUrl} 
+                      alt="Avatar"
+                      className="w-8 h-8 rounded-full object-cover border-2 border-gray-200"
+                      onError={handleImageError}
+                    />
+                  ) : (
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center border-2 border-gray-200">
+                      <span className="text-white text-sm font-medium">{userInitial}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
