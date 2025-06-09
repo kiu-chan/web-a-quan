@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useState } from 'react'
+import { useCollection } from '../hooks/useFirestore'
 import { 
   AiOutlineHome, 
   AiOutlineUser, 
@@ -17,6 +18,18 @@ import {
 const PublicLayout = ({ children }) => {
   const location = useLocation()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  
+  // Lấy thông tin liên hệ từ Firebase
+  const { documents: contacts } = useCollection('contacts')
+  const contactInfo = contacts.length > 0 ? contacts[0] : {
+    address: "Việt Nam",
+    description: "Học tiếng Đức để hiểu & đúng trong tâm",
+    email: "khanhk66uet@gmail.com",
+    facebook: "https://facebook.com/hoctiengduc",
+    instagram: "https://instagram.com/hoctiengduc",
+    phone: "+84 123 456 789",
+    twitter: "https://twitter.com/hoctiengduc"
+  }
 
   const menuItems = [
     { path: '/', label: 'Trang chủ', icon: AiOutlineHome },
@@ -118,20 +131,28 @@ const PublicLayout = ({ children }) => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Logo & Description */}
             <div>
-              <h3 className="text-xl font-bold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent mb-4">Học tiếng Đức</h3>
+              <h3 className="text-xl font-bold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent mb-4">
+                Học tiếng Đức
+              </h3>
               <p className="text-gray-300 mb-4">
-                Học tiếng Đức để hiểu & đúng trong tâm
+                {contactInfo.description}
               </p>
               <div className="flex space-x-4">
-                <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                  <AiOutlineFacebook className="h-6 w-6" />
-                </a>
-                <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                  <AiOutlineInstagram className="h-6 w-6" />
-                </a>
-                <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                  <AiOutlineTwitter className="h-6 w-6" />
-                </a>
+                {contactInfo.facebook && (
+                  <a href={contactInfo.facebook} className="text-gray-400 hover:text-white transition-colors">
+                    <AiOutlineFacebook className="h-6 w-6" />
+                  </a>
+                )}
+                {contactInfo.instagram && (
+                  <a href={contactInfo.instagram} className="text-gray-400 hover:text-white transition-colors">
+                    <AiOutlineInstagram className="h-6 w-6" />
+                  </a>
+                )}
+                {contactInfo.twitter && (
+                  <a href={contactInfo.twitter} className="text-gray-400 hover:text-white transition-colors">
+                    <AiOutlineTwitter className="h-6 w-6" />
+                  </a>
+                )}
               </div>
             </div>
 
@@ -156,9 +177,9 @@ const PublicLayout = ({ children }) => {
             <div>
               <h4 className="text-lg font-semibold mb-4">Thông tin liên hệ</h4>
               <div className="text-gray-300 space-y-2">
-                <p>Email: contact@hoctiengduc.com</p>
-                <p>Phone: +84 123 456 789</p>
-                <p>Địa chỉ: Thái Nguyên, Việt Nam</p>
+                <p>Email: {contactInfo.email}</p>
+                <p>Phone: {contactInfo.phone}</p>
+                <p>Địa chỉ: {contactInfo.address}</p>
               </div>
             </div>
           </div>
