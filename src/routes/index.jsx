@@ -5,10 +5,14 @@ import Courses from '../pages/public/Courses'
 import Enroll from '../pages/public/Enroll'
 import Blog from '../pages/public/Blog'
 import Contact from '../pages/public/Contact'
+import Login from '../pages/auth/Login'
+import Signup from '../pages/auth/Signup'
+import ForgotPassword from '../pages/auth/ForgotPassword'
 
 // Layouts
 import PublicLayout from '../layouts/PublicLayout'
 import PrivateLayout from '../layouts/PrivateLayout'
+import AuthLayout from '../layouts/AuthLayout'
 
 // Routes công khai
 const publicRoutes = [
@@ -41,6 +45,22 @@ const publicRoutes = [
         path: '/contact',
         component: Contact,
         layout: PublicLayout
+    },
+    // Auth routes
+    {
+        path: '/login',
+        component: Login,
+        layout: AuthLayout
+    },
+    {
+        path: '/signup',
+        component: Signup,
+        layout: AuthLayout
+    },
+    {
+        path: '/forgot-password',
+        component: ForgotPassword,
+        layout: AuthLayout
     }
 ]
 

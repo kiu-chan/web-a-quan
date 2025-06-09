@@ -3,6 +3,8 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import { 
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
   signOut,
   onAuthStateChanged,
   updateProfile,
@@ -24,6 +26,12 @@ export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
+  // Google Auth Provider
+  const googleProvider = new GoogleAuthProvider()
+  googleProvider.setCustomParameters({
+    prompt: 'select_account'
+  })
+
   // Đăng ký tài khoản mới
   const signup = async (email, password, displayName = '') => {
     try {
@@ -40,6 +48,11 @@ export const AuthProvider = ({ children }) => {
   // Đăng nhập
   const signin = (email, password) => {
     return signInWithEmailAndPassword(auth, email, password)
+  }
+
+  // Đăng nhập với Google
+  const signinWithGoogle = () => {
+    return signInWithPopup(auth, googleProvider)
   }
 
   // Đăng xuất
@@ -70,6 +83,7 @@ export const AuthProvider = ({ children }) => {
     currentUser,
     signup,
     signin,
+    signinWithGoogle,
     logout,
     resetPassword,
     updateUserProfile

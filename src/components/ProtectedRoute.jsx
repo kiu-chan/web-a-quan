@@ -1,11 +1,11 @@
 import { Navigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 
 const ProtectedRoute = ({ children }) => {
-  // Logic kiểm tra authentication sẽ thêm sau
-  const isAuthenticated = false // Tạm thời set false
+  const { currentUser } = useAuth()
 
-  if (!isAuthenticated) {
-    return <Navigate to="/" replace />
+  if (!currentUser) {
+    return <Navigate to="/login" replace />
   }
 
   return children
