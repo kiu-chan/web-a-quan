@@ -58,9 +58,8 @@ const Enroll = () => {
     setIsLoading(true)
     setSubmitError('')
 
-    try {
-      // API URL - sử dụng port 5000 cho server  
-      const API_URL = 'http://localhost:3000'
+    try {  
+      const API_URL = 'https://harutobui.com'
       
       console.log('=== ENROLL DEBUG INFO ===')
       console.log('API_URL:', API_URL)

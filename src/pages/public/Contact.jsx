@@ -146,8 +146,7 @@ const Contact = () => {
     setSubmitError('')
 
     try {
-      // API URL - sử dụng port 3000 cho server
-      const API_URL = 'http://localhost:3000'
+      const API_URL = 'https://harutobui.com'
       
       console.log('=== DEBUG INFO ===')
       console.log('API_URL:', API_URL)
