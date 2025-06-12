@@ -7,7 +7,7 @@ require('dotenv').config()
 const emailRoutes = require('./routes/email')
 
 const app = express()
-const PORT = process.env.PORT || 5000
+const PORT = process.env.PORT || 3000
 
 // Middleware bảo mật
 app.use(helmet())
@@ -17,7 +17,11 @@ app.use(cors({
   origin: [
     'http://localhost:3000', 
     'http://localhost:5173', 
-    'http://localhost:5174'
+    'http://localhost:5174',
+    'https://harutobui.com',
+    'http://harutobui.com',
+    'https://www.harutobui.com',
+    'http://www.harutobui.com'
   ],
   credentials: true
 }))
